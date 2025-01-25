@@ -90,6 +90,15 @@ class Musixmatch(LRCProvider):
                 )
                 lrc = lrc.replace(org, org + "\n" + f"({tr})")
         return lrc
+    
+    def save_lrc(self, lrc: str, lastLine: str):
+        file_name = lastLine.replace(" ", "_") + ".txt"  # Replace spaces with underscores and add ".txt" extension
+
+        # Open the file in write mode and save the lrc_text to it
+        with open(file_name, "w") as file:
+            file.write(lrc)
+
+        print(f"Lyrics saved to {file_name}")
 
     def get_lrc_word_by_word(self, track_id: str) -> Optional[str]:
         r = self._get("track.richsync.get", [("track_id", track_id)])
@@ -97,13 +106,38 @@ class Musixmatch(LRCProvider):
             lrc_raw = r.json()["message"]["body"]["richsync"]["richsync_body"]
             lrc_raw = json.loads(lrc_raw)
             lrc = ""
-            for i in lrc_raw:
-                lrc += f"[{format_time(i['ts'])}] "
-                for l in i["l"]:
-                    t = format_time(float(i["ts"]) + float(l["o"]))
-                    lrc += f"<{t}> {l['c']} "
+            lrc_formatted = "["
+            for i in range(0, len(lrc_raw)):
+                # lrc += f"[{format_time(i['ts'])}] "
+                for l in range(0, len(lrc_raw[i]['l'])):
+                    
+                    if l != len(lrc_raw) or l != 0:
+                        if lrc_raw[i]["l"][l-1]["c"] != " ":
+                            if i == 0 and l == 0:
+                                lrc_formatted += ""
+                            else:
+                                lrc_formatted += ","
+                            lrc_formatted += "\n"
+                    t = format_time(float(lrc_raw[i]["ts"]) + float(lrc_raw[i]['l'][l]["o"]))
+                    lastTime = float(lrc_raw[i]['te'])
+                    unformattedTime = float(lrc_raw[i]["ts"]) + float(lrc_raw[i]['l'][l]["o"])
+                    try:
+                        unformattedTimeEnd = float(lrc_raw[i]["ts"]) + float(lrc_raw[i]['l'][l + 1]["o"])
+                    except:
+                        unformattedTimeEnd = lastTime
+                    lrc += f"<{t}> {lrc_raw[i]['l'][l]['c']} "
+                    print(f"<{t}> {lrc_raw[i]['l'][l]['c']} ")
+                    if lrc_raw[i]["l"][l]["c"] != " ":
+                        lrc_formatted += f'LyricWord(word: "{lrc_raw[i]["l"][l]["c"]}", startTime: {unformattedTime}, endTime: {unformattedTimeEnd})'
+                    lastLine = lrc_raw[i]['x']
+                lrc += f"{format_time(lrc_raw[i]['te'])}"
                 lrc += "\n"
+            lrc_formatted += "\n"
+            lrc_formatted += "]"
+            print(lrc_formatted)
+            self.save_lrc(lrc_formatted, lastLine)
             return lrc
+    
 
     def get_lrc(self, search_term: str) -> Optional[str]:
         r = self._get(

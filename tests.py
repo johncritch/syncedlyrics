@@ -1,7 +1,7 @@
 """Some simple tests for geting notifed for API changes of the providers"""
 
 import os
-import syncedlyrics
+import syncedlyrics2
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -10,7 +10,7 @@ q = os.getenv("TEST_Q", "bad guy billie eilish")
 
 
 def _test_provider(provider: str, **kwargs):
-    lrc = syncedlyrics.search(
+    lrc = syncedlyrics2.search(
         search_term=q, allow_plain_format=True, providers=[provider], **kwargs
     )
     logging.debug(lrc)

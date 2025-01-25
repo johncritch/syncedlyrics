@@ -1,6 +1,6 @@
 import argparse
 import logging
-from syncedlyrics import search
+from syncedlyrics2 import search
 
 
 def cli_handler():
